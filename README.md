@@ -1,12 +1,148 @@
-- 👋 Hi, I’m @saragonzalez2024
-- 👀 I’m interested in ...
-- 🌱 I’m currently learning ...
-- 💞️ I’m looking to collaborate on ...
-- 📫 How to reach me ...
-- 😄 Pronouns: ...
-- ⚡ Fun fact: ...
+--- Cabecera
+CREATE TABLE PRODUCTO(
+  ID_PRODUCTO  NUMBER(20) NOT NULL,
+  NOMBRE_PRODUCTO VARCHAR2(100),
+  PRECIO NUMBER(200),
+  ESTADO VARCHAR2(20),
+  CANTIDAD NUMBER(20),
+  FECHA_GRABACION DATE);
 
-<!---
-saragonzalez2024/saragonzalez2024 is a ✨ special ✨ repository because its `README.md` (this file) appears on your GitHub profile.
-You can click the Preview link to take a look at your changes.
---->
+INSERT INTO PRODUCTO VALUES(1,'BORRADOR',500,'ACTIVO',2,SYSDATE);
+INSERT INTO PRODUCTO VALUES(2,'LAPIZ',1000,'ACTIVO',2,SYSDATE);
+INSERT INTO PRODUCTO VALUES(1,'SACA PUNTAS',1500,'ACTIVO',2,SYSDATE);
+
+/
+
+CREATE SEQUENCE seq_producto
+  MINVALUE 1
+  MAXVALUE 1000
+  INCREMENT BY 1
+  NOCYCLE
+  NOORDER
+  NOCACHE
+/
+--- Cabecera
+CREATE TABLE CLIENTES(
+    ID_CLIENTE NUMBER(20) NOT NULL,
+    NOMBRE_CLIENTE VARCHAR2(100),
+    APELLIDO VARCHAR2(100),
+    CI VARCHAR2(100),
+    DIRECCION VARCHAR2(200),
+    TELEFONO VARCHAR2(20),
+    EMAIL VARCHAR2(100),
+    FECHA_REGISTRO DATE DEFAULT SYSDATE
+);
+
+INSERT INTO CLIENTES VALUES(1,'SARA','GONZALEZ',4357826,'SUIZA 351','0985792607','SARAGONZALEZB10@GMAIL.COM',SYSDATE);
+INSERT INTO CLIENTES VALUES(2,'FERNANDO','EMERY',4638064,'SAN VICENTE','0985123456','FERNANDO.EMERY@GMAIL.COM',SYSDATE);
+INSERT INTO CLIENTES VALUES(3,'MARIA','LOPEZ',4333888,'DIEGO DE SILVA','0981123456','MARIA.LOPEZ@GMAIL.COM',SYSDATE);
+
+
+/
+CREATE SEQUENCE seq_clientes
+  MINVALUE 1
+  MAXVALUE 1000
+  INCREMENT BY 1
+  NOCYCLE
+  NOORDER
+  NOCACHE
+
+
+/
+-- Cabecera
+CREATE TABLE VENTAS(
+    ID_VENTA NUMBER(20) NOT NULL,
+    ID_CLIENTE NUMBER(20) NOT NULL,
+    FECHA_VENTA DATE DEFAULT SYSDATE,
+
+)
+/
+INSERT INTO VENTAS VALUES(1,1,SYSDATE);
+INSERT INTO VENTAS VALUES(2,2,SYSDATE);
+INSERT INTO VENTAS VALUES(3,3,SYSDATE);
+
+
+/
+CREATE SEQUENCE seq_ventas
+  MINVALUE 1
+  MAXVALUE 1000
+  INCREMENT BY 1
+  NOCYCLE
+  NOORDER
+  NOCACHE
+
+/
+-- Clave primaria
+ALTER TABLE VENTAS
+  ADD CONSTRAINT ID_VENTAS_PK PRIMARY KEY (
+   ID_VENTAS
+  )
+
+
+/
+-- Detalle
+CREATE TABLE DET_VENTAS(
+    DET_ID_VENTAS NUMBER(20) NOT NULL,
+    VENTAS_ID_VENTAS NUMBER(20),
+    CANTIDAD NUMBER(200),
+    PRECIO_VENTAS NUMBER(10, 2),
+);
+
+/
+INSERT INTO DET_VENTAS VALUES(1,1,2,500);
+INSERT INTO DET_VENTAS VALUES(2,2,2,1000);
+INSERT INTO DET_VENTAS VALUES(2,2,2,1500);
+
+/
+CREATE SEQUENCE seq_det_ventas
+  MINVALUE 1
+  MAXVALUE 1000
+  INCREMENT BY 1
+  NOCYCLE
+  NOORDER
+  NOCACHE
+
+/
+-- Clave Primaria
+ALTER TABLE DET_VENTAS
+  ADD CONSTRAINT DET_ID_VENTAS_PK PRIMARY KEY (
+   ID_VENTAS
+  )
+
+/
+-- Clave Foranea
+  ADD CONSTRAINT DET_VENTAS_FK FOREIGN KEY (
+    VENTAS_ID_VENTAS
+  ) REFERENCES VENTAS (
+    ID_VENTAS
+  )
+
+
+/
+
+CREATE   TRIGGER producto_trig BEFORE INSERT OR DELETE OR UPDATE ON producto REFERENCING NEW AS NEW OLD AS OLD FOR EACH ROW
+DECLARE
+DUMMY CHAR(1);
+BEGIN
+  ---- permite que al insertar registros tenga que ir guardando los id correlativamente.
+  IF INSERTING THEN
+     :new.id_producto := seq_producto.NEXTVAL;
+  END IF;
+  --- Indica que no se podra modificar la fecha de grabacion.
+  IF UPDATING THEN
+     IF IF_UPDATE(:NEW.FECHA_GRABACION, :OLD.FECHA_GRABACION) THEN
+        Raise_Application_Error(-20000, 'No se puede modificar fecha del producto');
+     END IF;
+  END IF;
+   -- indica que no se podra eliminar el estado si la fecha es mayor o igual a la fecha actual
+  IF DELETING THEN
+    IF :NEW.ESTADO = 'ACTIVO' AND :NEW.FECHA_GRABACION >= SYSDATE THEN
+       Raise_Application_Error(-20000, 'No puede eliminar un producto Activo, primeramente debe Eliminar');
+    END IF;
+  END IF;
+END;
+
+
+
+
+
